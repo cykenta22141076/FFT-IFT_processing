@@ -1,104 +1,101 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+!pip install scikit-image==0.12.3
 
-# C extensions
-*.so
+import numpy as np
+from numpy.random import rand
+from numpy import uint8, float32, float64, log, pi, sin, cos, abs, sqrt
+from scipy.fftpack import fft
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+import cv2
+from PIL import Image
+import scipy.misc
+from scipy.fftpack import dct, idct
+import sys
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.gray();
+from matplotlib.pyplot import imshow
+from skimage.io import imread, imsave
+from skimage.color import rgb2gray, rgb2hsv
+from skimage.transform import rotate, resize
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
+import skimage
+skmajor, skminor, sknumber = skimage.__version__.split(".")
+    
 
-# Translations
-*.mo
-*.pot
+if int(skminor) >= 11:
+    from skimage.filters import threshold_otsu # version 0.11 and after
+else:
+    from skimage.filter import threshold_otsu # version 0.10 and before
+    
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
+from scipy.ndimage.filters import convolve
+from __future__ import print_function, division
 
-# Flask stuff:
-instance/
-.webassets-cache
+from os.path import getsize
 
-# Scrapy stuff:
-.scrapy
+from time import time
 
-# Sphinx documentation
-docs/_build/
 
-# PyBuilder
-target/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+image = cv2.imread("images/steve-jobs.png")
 
-# pyenv
-.python-version
+img_gray = cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
+plt.imshow(img_gray)
+plt.show()
 
-# celery beat schedule file
-celerybeat-schedule
+fimg = np.fft.fft2(img_gray)
+fshift = np.fft.fftshift(fimg)
+magnitude_spectrum = 20*np.log(np.abs(fshift))
+plt.imshow(magnitude_spectrum)
+plt.show()
 
-# SageMath parsed files
-*.sage.py
+class mouseParam:
+    def __init__(self, magnitude_spectrum):
+        #マウス入力用のパラメータ
+        self.mouseEvent = {"x":None, "y":None, "event":None, "flags":None}
+        #マウス入力の設定
+        cv2.setMouseCallback(magnitude_spectrum, self.__CallBackFunc, None)    
+    #コールバック関数
+    def __CallBackFunc(self, eventType, x, y, flags, userdata):
+        self.mouseEvent["x"] = x
+        self.mouseEvent["y"] = y
+        self.mouseEvent["event"] = eventType    
+        self.mouseEvent["flags"] = flags    
+    #マウス入力用のパラメータを返すための関数
+    def getData(self):
+        return self.mouseEvent
+    #マウスイベントを返す関数
+    def getEvent(self):
+        return self.mouseEvent["event"]
+    #マウスフラグを返す関数
+    def getFlags(self):
+        return self.mouseEvent["flags"]
+    #xの座標を返す関数
+    def getX(self):
+        return self.mouseEvent["x"]
+    #yの座標を返す関数
+    def getY(self):
+        return self.mouseEvent["y"]
+    #xとyの座標を返す関数
+    def getPos(self):
+        return (self.mouseEvent["x"], self.mouseEvent["y"])
+    
+    
+H,W = img_gray.shape
+screen = np.zeros((H,W))
+canvas = np.zeros((H,W))
+for h in range(H):
+    for w in range(W):
+        a = np.zeros((H,W))
+        a[h,w] = 1
+        x,y = getPos
+        base = idct(idct(a, axis=0), axis=1) ## create dct bases
+        canvas += magnitude_spectrum[x,y] * base ## accumulate
+        screen  = magnitude_spectrum[x,y]
+        plt.imshow(canvas)
+        plt.imshow(base)
+        plt.imshow(screen)
+        plt.show()
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
